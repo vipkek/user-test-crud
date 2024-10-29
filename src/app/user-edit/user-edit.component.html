@@ -1,0 +1,49 @@
+<div class="row">
+  <div class="d-flex">
+    <button type="button" class="btn btn-secondary" (click)="navigationBack()">Back to list</button>
+    <button type="button" class="btn btn-primary mx-2" (click)="submit()">Save changes</button>
+    <loader *ngIf="isLoading" text="Loading..." ></loader>
+  </div>
+
+  <form [formGroup]="form"
+        class="col-xl-6 col-md-6 col-sm-12 mt-3">
+    <div class="mb-3">
+      <label for="name" class="col-form-label">Name:</label>
+      <input type="text"
+             formControlName="username"
+             class="form-control"
+             id="name"/>
+      <div validationError controlName="username" [formGroup]="form"></div>
+    </div>
+    <div class="mb-3">
+      <label for="email" class="col-form-label">Primary email:</label>
+      <input type="email"
+             formControlName="email"
+             class="form-control"
+             id="email"/>
+      <div validationError controlName="email" [formGroup]="form"></div>
+    </div>
+
+    <form class="mb-3" [formGroup]="emailForm">
+      <div formArrayName="emails">
+        <label class="col-form-label">Additional emails:</label>
+        <div *ngFor="let email of emails.controls; let i = index"
+             [formGroupName]="i"
+             class="position-relative">
+          <input formControlName="email"
+                 class="form-control mt-2"
+                 placeholder="Enter email" />
+          <div validationError controlName="email" [formGroup]="getFormGroup(email)"></div>
+          <i class="btn btn-sm remove-email" (click)="removeEmail(i)"></i>
+        </div>
+      </div>
+      <button type="button" class="btn btn-success mt-3" (click)="addEmail()">Add email</button>
+    </form>
+
+  </form>
+
+  <div *ngIf="isSuccessMessage"
+       class="alert alert-success mt-5" role="alert">
+    User successfully updated!
+  </div>
+</div>

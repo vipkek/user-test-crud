@@ -1,0 +1,5 @@
+@import '../../../assets/styles/mixins';
+
+.cross-btn {
+  @include cross-icon(#000, 2rem, .25rem);
+}

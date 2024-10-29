@@ -1,0 +1,20 @@
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+
+  .title {
+    font-size: 5rem;
+    color: #ff4757;
+    margin: 0;
+  }
+
+  .message {
+    font-size: 1.5rem;
+    color: #2f3542;
+    margin: 20px 0;
+  }
+}
