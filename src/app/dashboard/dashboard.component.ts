@@ -1,28 +1,29 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, finalize, Subject, takeUntil, throwError } from 'rxjs';
-import { UserModel } from '../core/interface/user';
-import { UserAddModalComponent } from './user-add-modal/user-add-modal.component';
-import { UserItemComponent } from './user-item/user-item.component';
-import { UserService } from '../core/services/user.service';
-import { ApiResponse } from '../core/interface/api';
-import { LoaderComponent } from '../shared/components/loader/loader.component';
+
+import { UserModel } from '@interfaces';
+import { UserService } from '@services';
+import { LoaderComponent } from '@components';
+
+import { AddUserModalComponent } from './add-user-modal';
+import { UserItemComponent } from './user-item';
 
 @Component({
   selector: 'dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    UserAddModalComponent,
-    UserItemComponent,
-    LoaderComponent
-  ],
-  templateUrl: './dashboard.component.html'
+  imports: [AddUserModalComponent, UserItemComponent, LoaderComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './dashboard.component.html',
 })
-
 export class DashboardComponent implements OnInit, OnDestroy {
-  @ViewChild(UserAddModalComponent)
-  modalComponent: UserAddModalComponent | undefined;
+  isAddUserModalOpen = new Subject<boolean>();
 
   isLoading = false;
 
@@ -30,9 +31,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isSuccessMessage = false;
 
   private isDestroyedSubject = new Subject<void>();
-  private timeoutId: ReturnType<typeof setTimeout> = 0;
+  private timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -41,28 +45,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.isDestroyedSubject.next();
     this.isDestroyedSubject.complete();
-    clearTimeout(this.timeoutId);
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
   }
 
-  openAddUserModel(): void {
-    this.modalComponent?.openModal();
+  openAddUserModal(): void {
+    this.isAddUserModalOpen.next(true);
   }
 
   private loadUsers(): void {
     this.isLoading = true;
 
-    this.userService.getUsers()
+    this.userService
+      .getUsers()
       .pipe(
-        catchError((e) => {
-          this.isLoading = false;
-          return throwError(e);
+        catchError((e: HttpErrorResponse) => {
+          return throwError(() => e);
         }),
-        finalize(() => this.isLoading = false),
-        takeUntil(this.isDestroyedSubject)
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntil(this.isDestroyedSubject),
       )
-      .subscribe((response: ApiResponse<UserModel[]>) => {
-        this.users = response.data;
-      })
+      .subscribe(({ data }) => {
+        this.users = data;
+        this.cdr.markForCheck();
+      });
   }
 
   addUser(data: UserModel | null): void {
@@ -73,20 +83,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.users?.unshift(data);
   }
 
-  deleteUser(userId: string, index: number): void {
-    this.userService.deleteUser(userId)
+  deleteUser(userId: string): void {
+    this.userService
+      .deleteUser(userId)
       .pipe(
-        catchError((e) => {
-          return throwError(e);
+        catchError((e: HttpErrorResponse) => {
+          return throwError(() => e);
         }),
-        takeUntil(this.isDestroyedSubject)
+        takeUntil(this.isDestroyedSubject),
       )
       .subscribe(() => {
-        this.users?.splice(index, 1);
+        this.users =
+          this.users === null ?
+            []
+          : this.users.filter((u: UserModel) => u.id != userId);
         this.isSuccessMessage = true;
+        this.cdr.markForCheck();
+
         this.timeoutId = setTimeout(() => {
           this.isSuccessMessage = false;
+          this.cdr.markForCheck();
         }, 3000);
-      })
+      });
   }
 }

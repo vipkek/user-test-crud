@@ -1,10 +1,12 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export function nameValidator(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
+import { MAX_NAME_LENGTH } from '@consts';
+
+export const nameValidator = (): ValidatorFn => {
+  return (control: AbstractControl<string>): ValidationErrors | null => {
     const value = control.value;
 
-    if (value && value.length > 100) {
+    if (value && value.length > MAX_NAME_LENGTH) {
       return { maxLength: true };
     }
 
@@ -15,4 +17,4 @@ export function nameValidator(): ValidatorFn {
 
     return null;
   };
-}
+};

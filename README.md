@@ -2,20 +2,20 @@
 
 Mockup backend works directly with two files:
 
-`mock-backend.interceptor.ts` and `cache.service.ts`
+`mock-backend.interceptor.ts` and `store.service.ts`
 
 The cache service using Map to store, edit and remove data and injected only in the interceptor. This made for backend logic isolation.
 
 ### Main features:
- - Standalone Components structure.
- - Add random (in range, see func: `generateRandDebounceTime`) debounce time for mocked requests in Interceptor.
- - Dockerized for easy deployment and production with Nginx.
- - All the core logic moved in separate folder (includes: interfaces, utils, validators, services).
- - Moved `shared` components and directives in separate folder.
- - Considered component memory leaks prevention.
- - Loaders and after action messages.
- - 404 page.
 
+- Standalone Components structure.
+- Add random (in range, see func: `generateRandDebounceTime`) debounce time for mocked requests in Interceptor.
+- Dockerized for easy deployment and production with Nginx.
+- All the core logic moved in separate folder (includes: interfaces, utils, validators, services).
+- Moved `shared` components and directives in separate folder.
+- Considered component memory leaks prevention.
+- Loaders and after action messages.
+- 404 page.
 
 # UserTestCrud
 

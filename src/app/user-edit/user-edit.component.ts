@@ -1,6 +1,12 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { CommonModule, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import {
   AbstractControl,
   FormArray,
@@ -8,58 +14,66 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  Validators
+  Validators,
 } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, finalize, Subject, takeUntil, throwError } from 'rxjs';
-import { UserService } from '../core/services/user.service';
-import { ApiResponse } from '../core/interface/api';
-import { UserModel } from '../core/interface/user';
-import { nameValidator } from '../core/validators/name-validator';
-import { LoaderComponent } from '../shared/components/loader/loader.component';
-import { ValidationErrorDirective } from '../shared/directives/validation-error.directive';
+
+import { ControlName } from '@enums';
+import { ApiResponse, UserModel } from '@interfaces';
+import { UserService } from '@services';
+import { nameValidator } from '@validators';
+import { LoaderComponent } from '@components';
+import { ValidationErrorDirective } from '@directives';
+
+const EMAILS_FORM_KEY = 'emails';
 
 @Component({
   selector: 'user-edit',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    LoaderComponent,
-    ValidationErrorDirective
-  ],
+  imports: [ReactiveFormsModule, LoaderComponent, ValidationErrorDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './user-edit.component.html',
-  styleUrl: './user-edit.component.scss'
+  styleUrl: './user-edit.component.scss',
 })
 export class UserEditComponent implements OnInit, OnDestroy {
   userId = '';
 
   isLoading = false;
   isSuccessMessage = false;
+  ControlName = ControlName;
 
   form = new FormGroup({
-    username: new FormControl<string>(
-      '', [Validators.required, nameValidator()]
-    ),
-    email: new FormControl<string>(
-      '', [Validators.required, Validators.email]
-    )
+    username: new FormControl<string>('', [
+      Validators.required,
+      nameValidator(),
+    ]),
+    email: new FormControl<string>('', [Validators.required, Validators.email]),
   });
 
-  emailForm: FormGroup = this.fb.group({
-    emails: this.fb.array([this.createEmail()])
-  });
+  emailForm: FormGroup<{
+    emails: FormArray<
+      FormGroup<{ [ControlName.Email]: FormControl<string | null> }>
+    >;
+  }>;
 
   private isDestroyedSubject = new Subject<void>();
-  private timeoutId: ReturnType<typeof setTimeout> = 0;
+  private timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private route: ActivatedRoute,
-              private userService: UserService,
-              private location: Location,
-              private fb: FormBuilder) {
+  constructor(
+    private route: ActivatedRoute,
+    private userService: UserService,
+    private location: Location,
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef,
+  ) {
+    this.emailForm = this.fb.group({
+      emails: this.fb.array([this.createEmail()]),
+    });
   }
 
   ngOnInit(): void {
-    this.userId = this.route.snapshot.paramMap.get('id') || '';
+    this.userId = this.route.snapshot.paramMap.get('id') ?? '';
 
     if (!this.userId) {
       return;
@@ -67,31 +81,41 @@ export class UserEditComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    this.userService.getUser(this.userId)
+    this.userService
+      .getUser(this.userId)
       .pipe(
-        catchError((e) => {
-          this.isLoading = false;
-          return throwError(e);
+        catchError((e: HttpErrorResponse) => {
+          return throwError(() => e);
         }),
-        finalize(() => this.isLoading = false),
-        takeUntil(this.isDestroyedSubject)
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntil(this.isDestroyedSubject),
       )
       .subscribe((response: ApiResponse<UserModel>) => {
-        if (response?.data) {
+        if (response.data) {
           this.initFormValues(response.data);
+          this.cdr.markForCheck();
         }
-      })
+      });
   }
 
   ngOnDestroy(): void {
     this.isDestroyedSubject.next();
     this.isDestroyedSubject.complete();
-    clearTimeout(this.timeoutId);
+
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
   }
 
-  createEmail(email?: string): FormGroup {
+  createEmail(email?: string) {
     return this.fb.group({
-      email: [email || '', [Validators.required, Validators.email]]
+      [ControlName.Email]: [
+        email ?? '',
+        [Validators.required, Validators.email],
+      ],
     });
   }
 
@@ -104,17 +128,17 @@ export class UserEditComponent implements OnInit, OnDestroy {
   }
 
   getFormGroup(control: AbstractControl) {
-    return control as FormGroup;
+    return <FormGroup>control;
   }
 
   get emails(): FormArray {
-    return this.emailForm?.get('emails') as FormArray;
+    return <FormArray>this.emailForm.get(EMAILS_FORM_KEY);
   }
 
   initFormValues(data: UserModel) {
     this.form.setValue({
       username: data.username,
-      email: data.email
+      email: data.email,
     });
 
     if (data.additionalEmails?.length) {
@@ -123,46 +147,47 @@ export class UserEditComponent implements OnInit, OnDestroy {
   }
 
   setEmails(emails: string[]) {
-    const emailFormArray = this.emailForm.get('emails') as FormArray;
+    const emailFormArray = <FormArray>this.emailForm.get(EMAILS_FORM_KEY);
     emailFormArray.clear();
 
-    emails.forEach(email => {
+    emails.forEach((email) => {
       emailFormArray.push(this.createEmail(email));
     });
   }
 
   submit(): void {
-    if (!this.form.valid || !this.emailForm.valid) {
-      return;
-    }
-
     this.isLoading = true;
-
-    const formValues = this.emailForm.value;
-    const additionalEmails = formValues.emails.map((item: { email: string }) => item.email);
+    this.cdr.markForCheck();
 
     const data = <UserModel>{
       id: this.userId,
-      additionalEmails: additionalEmails,
-      ...this.form.value
-    } ;
+      additionalEmails: this.emailForm.value.emails?.map(
+        (item: Partial<{ email: string | null }>) => item.email,
+      ),
+      ...this.form.value,
+    };
 
-    this.userService.updateUser(data)
+    this.userService
+      .updateUser(data)
       .pipe(
-        catchError((e) => {
-          this.isLoading = false;
-          return throwError(e);
+        catchError((e: HttpErrorResponse) => {
+          return throwError(() => e);
         }),
-        finalize(() => this.isLoading = false),
-        takeUntil(this.isDestroyedSubject)
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntil(this.isDestroyedSubject),
       )
-      .subscribe((response: ApiResponse<UserModel>) => {
+      .subscribe(() => {
         this.isSuccessMessage = true;
+        this.cdr.markForCheck();
 
         this.timeoutId = setTimeout(() => {
           this.isSuccessMessage = false;
+          this.cdr.markForCheck();
         }, 4000);
-      })
+      });
   }
 
   navigationBack(): void {

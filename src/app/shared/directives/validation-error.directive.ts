@@ -1,48 +1,69 @@
-import { Directive, Input, OnInit, ElementRef } from '@angular/core';
+import { Directive, Input, OnInit, ElementRef, OnDestroy } from '@angular/core';
 import { AbstractControl, FormGroup } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+
+import { ControlName } from '@enums';
+import { MAX_NAME_LENGTH } from '@consts';
 
 @Directive({
   selector: '[validationError]',
-  standalone: true
+  standalone: true,
 })
-export class ValidationErrorDirective implements OnInit {
+export class ValidationErrorDirective implements OnInit, OnDestroy {
   @Input()
-  controlName: string | undefined;
+  controlName: ControlName | undefined;
 
   @Input()
   formGroup: FormGroup | undefined;
 
-  constructor(private el: ElementRef) {}
+  private isDestroyedSubject = new Subject<void>();
+
+  constructor(private el: ElementRef<HTMLDivElement>) {}
 
   ngOnInit() {
     if (this.formGroup && this.controlName) {
-      const control = this.formGroup.get(this.controlName) as AbstractControl;
-      if (control) {
-        control.statusChanges.subscribe(() => this.showErrorMessages(control));
-      }
+      const control = <AbstractControl<string>>(
+        this.formGroup.get(this.controlName)
+      );
+      control.statusChanges
+        .pipe(takeUntil(this.isDestroyedSubject))
+        .subscribe(() => {
+          this.showErrorMessages(control);
+        });
     }
+  }
+
+  ngOnDestroy() {
+    this.isDestroyedSubject.next();
+    this.isDestroyedSubject.complete();
   }
 
   private showErrorMessages(control: AbstractControl) {
     const errorMessages: string[] = [];
+    const element = this.el.nativeElement;
 
-    if (control.errors) {
-      if (control.errors['required']) {
-        errorMessages.push('This field is required.');
-      }
-      if (control.errors['minlength']) {
-        errorMessages.push(`Minimum length is ${control.errors['minlength'].requiredLength} characters.`);
-      }
-      if (control.errors['invalidCharacters']) {
-        errorMessages.push('This characters is not allowed.');
-      }
-      if (control.errors['email']) {
-        errorMessages.push('This email is invalid.');
-      }
+    if (!control.errors) {
+      element.innerHTML = '';
+      return;
     }
 
-    this.el.nativeElement.innerHTML = errorMessages.join('<br>');
-    this.el.nativeElement.style.fontSize = '12px';
-    this.el.nativeElement.style.color = 'red';
+    if (control.errors['required']) {
+      errorMessages.push('This field is required.');
+    }
+    if (control.errors['maxLength']) {
+      errorMessages.push(
+        `Maximum length is ${String(MAX_NAME_LENGTH)} characters.`,
+      );
+    }
+    if (control.errors['invalidCharacters']) {
+      errorMessages.push('This characters is not allowed.');
+    }
+    if (control.errors['email']) {
+      errorMessages.push('This email is invalid.');
+    }
+
+    element.innerHTML = errorMessages.join('<br>');
+    element.style.fontSize = '12px';
+    element.style.color = 'red';
   }
 }

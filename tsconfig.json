@@ -1,14 +1,21 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,
@@ -17,11 +24,25 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "ES2022",
-    "useDefineForClassFields": false,
-    "lib": [
-      "ES2022",
-      "dom"
-    ]
+    "lib": ["ES2022", "dom"],
+    "paths": {
+      "@environments": ["./src/environments"],
+      "@environments/*": ["./src/environments/*"],
+      "@consts": ["./src/app/core/consts"],
+      "@consts/*": ["./src/app/core/consts/*"],
+      "@enums": ["./src/app/core/enums"],
+      "@enums/*": ["./src/app/core/enums/*"],
+      "@interfaces": ["./src/app/core/interfaces"],
+      "@interfaces/*": ["./src/app/core/interfaces/*"],
+      "@services": ["./src/app/core/services"],
+      "@services/*": ["./src/app/core/services/*"],
+      "@validators": ["./src/app/core/validators"],
+      "@validators/*": ["./src/app/core/validators/*"],
+      "@components": ["./src/app/shared/components"],
+      "@components/*": ["./src/app/shared/components/*"],
+      "@directives": ["./src/app/shared/directives"],
+      "@directives/*": ["./src/app/shared/directives/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

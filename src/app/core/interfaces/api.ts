@@ -1,6 +1,6 @@
 export interface ApiResponse<T> {
   data: T | null;
-  meta?: {
+  meta: {
     code: number;
     message: string;
     error?: string;

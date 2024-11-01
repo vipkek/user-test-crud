@@ -1,20 +1,26 @@
 <div class="d-flex">
-  <button type="button" class="btn btn-primary" (click)="openAddUserModel()">Add user</button>
-  <loader *ngIf="isLoading" text="Loading..." class="mx-2"></loader>
+  <button type="button" class="btn btn-primary" (click)="openAddUserModal()">
+    Add user
+  </button>
+  @if (isLoading) {
+    <loader text="Loading..." class="mx-2" />
+  }
 </div>
 
-<div class="row mx-0">
-  <ul class="list-group list-group-flush mt-4 col-xl-9 col-md-12 col-sm-12">
-    <user-item *ngFor="let user of users; let i = index"
-               [user]="user"
-               (deleteUser)="deleteUser(user.id, i)">
-    </user-item>
-  </ul>
+<ul class="list-group list-group-flush mt-4">
+  @for (user of users; track user.id) {
+    <user-item
+      class="list-group-item"
+      [user]="user"
+      (deleteUser)="deleteUser(user.id)"
+    />
+  }
+</ul>
 
-  <div *ngIf="isSuccessMessage"
-       class="alert alert-success mt-5" role="alert">
+@if (isSuccessMessage) {
+  <div class="alert alert-success mt-5" role="alert">
     User successfully removed!
   </div>
-</div>
+}
 
-<user-add-modal (addUser)="addUser($event)"></user-add-modal>
+<add-user-modal [isOpen]="isAddUserModalOpen" (addUser)="addUser($event)" />

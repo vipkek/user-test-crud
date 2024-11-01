@@ -1,10 +1,10 @@
-@import "../../assets/styles/mixins";
+@import '../../assets/styles/mixins';
 
 .remove-email {
-  @include cross-icon(#000, 2rem, .25rem);
+  @include cross-icon(#000, 2rem, 0.25rem);
   position: absolute;
   cursor: pointer;
-  right: .25rem;
-  top: .15rem;
+  right: 0.25rem;
+  top: 0.15rem;
   border: none;
 }
