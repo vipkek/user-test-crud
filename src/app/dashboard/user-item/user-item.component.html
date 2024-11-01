@@ -2,7 +2,7 @@
   <a class="col-4" data-test-id="username" [routerLink]="'/user/' + user?.id">{{
     user?.username
   }}</a>
-  <div class="col-7" data-test-id="username">{{ user?.email }}</div>
+  <div class="col-7" data-test-id="email">{{ user?.email }}</div>
   <div class="col-1 text-center">
     <i class="btn btn-sm cross-btn" (click)="deleteUser.emit()"></i>
   </div>
