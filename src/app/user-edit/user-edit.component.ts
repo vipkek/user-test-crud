@@ -41,6 +41,7 @@ export class UserEditComponent implements OnInit, OnDestroy {
 
   isLoading = false;
   isSuccessMessage = false;
+  errorMessage = '';
   ControlName = ControlName;
 
   form = new FormGroup({
@@ -85,6 +86,8 @@ export class UserEditComponent implements OnInit, OnDestroy {
       .getUser(this.userId)
       .pipe(
         catchError((e: HttpErrorResponse) => {
+          this.errorMessage = e.message;
+          this.cdr.markForCheck();
           return throwError(() => e);
         }),
         finalize(() => {
@@ -112,10 +115,7 @@ export class UserEditComponent implements OnInit, OnDestroy {
 
   createEmail(email?: string) {
     return this.fb.group({
-      [ControlName.Email]: [
-        email ?? '',
-        [Validators.required, Validators.email],
-      ],
+      [ControlName.Email]: [email ?? '', [Validators.email]],
     });
   }
 
@@ -171,6 +171,8 @@ export class UserEditComponent implements OnInit, OnDestroy {
       .updateUser(data)
       .pipe(
         catchError((e: HttpErrorResponse) => {
+          this.errorMessage = e.message;
+          this.cdr.markForCheck();
           return throwError(() => e);
         }),
         finalize(() => {

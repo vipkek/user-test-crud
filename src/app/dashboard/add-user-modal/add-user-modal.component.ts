@@ -52,6 +52,8 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   @Output()
   addUser = new EventEmitter<UserModel | null>();
 
+  errorMessage = '';
+
   form = new FormGroup({
     username: new FormControl<string>('', [
       Validators.required,
@@ -107,6 +109,8 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
       .createUser(<UserModel>this.form.value)
       .pipe(
         catchError((e: HttpErrorResponse) => {
+          this.errorMessage = e.message;
+          this.cdr.markForCheck();
           return throwError(() => e);
         }),
         finalize(() => {

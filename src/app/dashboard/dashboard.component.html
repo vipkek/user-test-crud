@@ -2,6 +2,7 @@
   <button type="button" class="btn btn-primary" (click)="openAddUserModal()">
     Add user
   </button>
+
   @if (isLoading) {
     <loader text="Loading..." class="mx-2" />
   }
@@ -17,8 +18,14 @@
   }
 </ul>
 
+@if (errorMessage) {
+  <div class="alert alert-danger mt-3" role="alert">
+    {{ errorMessage }}
+  </div>
+}
+
 @if (isSuccessMessage) {
-  <div class="alert alert-success mt-5" role="alert">
+  <div class="alert alert-success mt-3" role="alert">
     User successfully removed!
   </div>
 }

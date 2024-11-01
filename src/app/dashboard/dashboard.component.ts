@@ -29,6 +29,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   users: UserModel[] | null = [];
   isSuccessMessage = false;
+  errorMessage = '';
 
   private isDestroyedSubject = new Subject<void>();
   private timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -61,6 +62,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .getUsers()
       .pipe(
         catchError((e: HttpErrorResponse) => {
+          this.errorMessage = e.message;
+          this.cdr.markForCheck();
           return throwError(() => e);
         }),
         finalize(() => {
@@ -88,6 +91,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .deleteUser(userId)
       .pipe(
         catchError((e: HttpErrorResponse) => {
+          this.errorMessage = e.message;
+          this.cdr.markForCheck();
           return throwError(() => e);
         }),
         takeUntil(this.isDestroyedSubject),

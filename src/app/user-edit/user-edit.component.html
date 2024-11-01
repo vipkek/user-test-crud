@@ -58,7 +58,7 @@
     <form [id]="'emailForm'" class="mb-3" [formGroup]="emailForm">
       <div formArrayName="emails">
         <label class="col-form-label" for="email">Additional emails:</label>
-        @for (email of emails.controls; track email; let i = $index) {
+        @for (email of emails.controls; track email.value; let i = $index) {
           <div [formGroupName]="i" class="position-relative">
             <input
               autocomplete="email"
@@ -76,15 +76,21 @@
           </div>
         }
       </div>
-      <button type="button" class="btn btn-secondary mt-3" (click)="addEmail()">
+      <button type="button" class="btn btn-success mt-3" (click)="addEmail()">
         Add email
       </button>
     </form>
   </form>
 
   @if (isSuccessMessage) {
-    <div class="alert alert-success mt-5" role="alert">
+    <div class="alert alert-success mt-3" role="alert">
       User successfully updated!
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-success mt-3" role="alert">
+      {{ errorMessage }}
     </div>
   }
 </div>
