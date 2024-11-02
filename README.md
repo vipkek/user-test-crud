@@ -4,7 +4,7 @@ Mockup backend works directly with two files:
 
 `mock-backend.interceptor.ts` and `store.service.ts`
 
-The cache service using Map to store, edit and remove data and injected only in the interceptor. This made for backend logic isolation.
+The store service using Map to store, edit and remove data and injected only in the interceptor. This made for backend logic isolation.
 
 ### Main features:
 
@@ -16,10 +16,11 @@ The cache service using Map to store, edit and remove data and injected only in 
 - Considered component memory leaks prevention.
 - Loaders and after action messages.
 - 404 page.
+- Tests covered code.
 
 # UserTestCrud
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.5.
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.10.
 
 ## Development server
 
